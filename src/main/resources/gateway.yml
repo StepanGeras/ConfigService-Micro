@@ -1,0 +1,57 @@
+spring:
+  cloud:
+    gateway:
+      mvc:
+        routes:
+          - id: userservice
+            uri: http://localhost:8081
+            predicates:
+              - Path=/user/**
+          - id: bookservice
+            uri: http://localhost:8081
+            predicates:
+              - Path=/book/**
+          - id: adminservice
+            uri: http://localhost:8081
+            predicates:
+              - Path=/admin/**
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        enabled: true
+        service-name: gateway
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: my-group  # ID ?????? ????????????
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+
+
+jwt:
+  token:
+    secret:
+      test
+    expired:
+      3600000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
