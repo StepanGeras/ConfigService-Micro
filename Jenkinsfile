@@ -24,18 +24,11 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                script {
-                    def DOCKER_USERNAME = 'shifer'
-                    def DOCKER_PASSWORD = 'P207EiwdRv'
-            
+                Аутентификация и пуш образа в Docker Hub
+                withCredentials([usernamePassword(credentialsId: dockerhub-credentials, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
                     sh "docker push ${DOCKER_IMAGE}"
                 }
-                // Аутентификация и пуш образа в Docker Hub
-                // withCredentials([usernamePassword(credentialsId: dockerhub-credentials, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                //     sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
-                //     sh "docker push ${DOCKER_IMAGE}:${VERSION}"
-                // }
             }
         }
 
