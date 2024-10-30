@@ -1,11 +1,9 @@
 
 pipeline {
     agent any
-
+    
     environment {
-        DOCKER_REGISTRY = "localhost:61701" // Minikube registry
-        DOCKER_IMAGE = "${DOCKER_REGISTRY}/${env.JOB_NAME}" // Уникальное имя образа для микросервиса
-        DOCKER_HOST = "tcp://192.168.49.2:2376" // Docker демон Minikube
+        DOCKER_IMAGE = "localhost:61701/${env.JOB_NAME}:${env.BUILD_ID}" // имя образа
     }
 
     stages {
@@ -15,37 +13,25 @@ pipeline {
             }
         }
 
-        
-        stage('Check Docker Version') {
+        stage('Build') {
             steps {
-                sh 'docker --version'
+                sh './gradlew clean build'
+                sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
-        stage('Build and Push Images') {
+        stage('Push to Minikube Registry') {
             steps {
-                script {
-                    // Сборка Docker-образа
-                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
-                    sh "docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                }
+                sh "docker push ${DOCKER_IMAGE}"
             }
         }
 
         stage('Deploy to Minikube') {
             steps {
                 script {
-                    // Установка образа в текущий Deployment Minikube
-                    sh "kubectl set image deployment/${JOB_NAME} ${JOB_NAME}=${DOCKER_IMAGE}:${env.BUILD_NUMBER} --namespace=microservices"
+                    sh "kubectl set image deployment/${JOB_NAME} ${JOB_NAME}=${DOCKER_IMAGE} --namespace=microservices"
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            // Убираем неиспользуемые образы после завершения
-            sh 'docker image prune -f'
         }
     }
 }
