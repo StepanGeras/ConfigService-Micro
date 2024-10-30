@@ -3,7 +3,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_REGISTRY = "localhost:5000" // Minikube registry
+        DOCKER_REGISTRY = "localhost:61701" // Minikube registry
         DOCKER_IMAGE = "${DOCKER_REGISTRY}/${env.JOB_NAME}" // Уникальное имя образа для микросервиса
         DOCKER_HOST = "tcp://192.168.49.2:2376" // Docker демон Minikube
     }
