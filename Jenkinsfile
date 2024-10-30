@@ -17,14 +17,7 @@ pipeline {
             steps {
                 // Собрать проект с помощью Gradle и создать Docker образ
                 sh './gradlew clean build' // Собирает проект
-                // Сборка Docker образа с помощью Kaniko
-                sh '''
-                /kaniko/executor --context $WORKSPACE \
-                                 --dockerfile $WORKSPACE/Dockerfile \
-                                 --destination ${DOCKER_IMAGE} \
-                                 --oci-layout-path /kaniko/oci
-                '''
-                // sh "docker build -t ${DOCKER_IMAGE} ." // Создает Docker образ с версией
+                sh "docker build -t ${DOCKER_IMAGE} ." // Создает Docker образ с версией
             }
         }
 
