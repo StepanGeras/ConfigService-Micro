@@ -1,14 +1,12 @@
 pipeline {
 
+    agent any
+    
     environment {
         DOCKER_IMAGE = "shifer/${env.JOB_NAME}" // имя образа
-    }
-
-    agent {
-        docker {
-            image 'docker:latest'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
+        DOCKER_HOST = "tcp://$(minikube ip):2376" // Подключение к Docker-демону Minikube
+        DOCKER_TLS_VERIFY = "1"
+        DOCKER_CERT_PATH = "${env.HOME}/.minikube/certs" // Убедитесь, что сертификаты присутствуют
     }
 
     stages {
