@@ -51,5 +51,12 @@ pipeline {
             }
         }
     }
+
+    post {
+        always {
+            // Убираем неиспользуемые образы после завершения
+            sh 'docker image prune -f'
+        }
+    }
 }
 
