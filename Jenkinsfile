@@ -1,5 +1,4 @@
 pipeline {
-    agent any
 
     environment {
         DOCKER_IMAGE = "shifer/${env.JOB_NAME}" // имя образа
