@@ -8,16 +8,17 @@ pipeline {
         DOCKER_HOST = "tcp://192.168.49.2:2376" // Docker демон Minikube
     }
 
-    stage('Check Docker Version') {
-        steps {
-            sh 'docker --version'
-        }
-    }
-
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        
+        stage('Check Docker Version') {
+            steps {
+                sh 'docker --version'
             }
         }
 
