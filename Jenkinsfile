@@ -1,40 +1,158 @@
+def branch
+def revision
+def registryIp
 
 pipeline {
-    agent any
-    
-    environment {
-        DOCKER_IMAGE = "localhost:61701/${env.JOB_NAME}:${env.BUILD_ID}" // имя образа
+
+    agent {
+        kubernetes {
+            label 'build-service-pod'
+            defaultContainer 'jnlp'
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    job: build-service
+spec:
+  containers:
+  - name: gradle
+    image: gradle:7.6.0-jdk-11
+    command: ["cat"]
+    tty: true
+    volumeMounts:
+    - name: repository
+      mountPath: /root/.gradle/caches
+  - name: docker
+    image: docker:18.09.2
+    command: ["cat"]
+    tty: true
+    volumeMounts:
+    - name: docker-sock
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: repository
+    persistentVolumeClaim:
+      claimName: repository
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+"""
+        }
+    }
+    options {
+        skipDefaultCheckout true
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh './gradlew clean build'
-                sh "docker build -t ${DOCKER_IMAGE} ."
-            }
-        }
-
-        stage('Push to Minikube Registry') {
-            steps {
-                sh "docker push ${DOCKER_IMAGE}"
-            }
-        }
-
-        stage('Deploy to Minikube') {
+        stage ('checkout') {
             steps {
                 script {
-                    sh "kubectl set image deployment/${JOB_NAME} ${JOB_NAME}=${DOCKER_IMAGE} --namespace=microservices"
+                    def repo = checkout scm
+                    revision = sh(script: 'git log -1 --format=\'%h.%ad\' --date=format:%Y%m%d-%H%M | cat', returnStdout: true).trim()
+                    branch = repo.GIT_BRANCH.take(20).replaceAll('/', '_')
+                    if (branch != 'master') {
+                        revision += "-${branch}"
+                    }
+                    sh "echo 'Building revision: ${revision}'"
+                }
+            }
+        }
+        stage ('compile') {
+            steps {
+                container('gradle') {
+                    sh 'gradle clean build'
+                }
+            }
+        }
+        stage ('unit test') {
+            steps {
+                container('gradle') {
+                    sh 'gradle test'
+                }
+            }
+        }
+        stage ('integration test') {
+            steps {
+                container ('gradle') {
+                    sh 'gradle check'
+                }
+            }
+        }
+        stage ('build artifact') {
+            steps {
+                container('gradle') {
+                    sh "gradle assemble -Drevision=${revision}"
+                }
+                container('docker') {
+                    script {
+                        registryIp = sh(script: 'getent hosts registry.kube-system | awk \'{ print $1 ; exit }\'', returnStdout: true).trim()
+                        sh "docker build . -t ${registryIp}/demo/app:${revision} --build-arg REVISION=${revision}"
+                    }
+                }
+            }
+        }
+        stage ('publish artifact') {
+            when {
+                expression {
+                    branch == 'master'
+                }
+            }
+            steps {
+                container('docker') {
+                    sh "docker push ${registryIp}/demo/app:${revision}"
+                }
+            }
+        }
+        stage ('deploy to minikube') {
+            steps {
+                script {
+                    // Убедитесь, что у вас установлен kubectl
+                    sh "kubectl set image deployment/${JOB_NAME} ${JOB_NAME}=${DOCKER_IMAGE} --namespace=microservices" // Путь к вашему yaml-файлу сервиса
                 }
             }
         }
     }
 }
+
+
+
+// pipeline {
+//     agent any
+    
+//     environment {
+//         DOCKER_IMAGE = "localhost:61701/${env.JOB_NAME}:${env.BUILD_ID}" // имя образа
+//     }
+
+//     stages {
+//         stage('Checkout') {
+//             steps {
+//                 checkout scm
+//             }
+//         }
+
+//         stage('Build') {
+//             steps {
+//                 sh './gradlew clean build'
+//                 sh "docker build -t ${DOCKER_IMAGE} ."
+//             }
+//         }
+
+//         stage('Push to Minikube Registry') {
+//             steps {
+//                 sh "docker push ${DOCKER_IMAGE}"
+//             }
+//         }
+
+//         stage('Deploy to Minikube') {
+//             steps {
+//                 script {
+//                     sh "kubectl set image deployment/${JOB_NAME} ${JOB_NAME}=${DOCKER_IMAGE} --namespace=microservices"
+//                 }
+//             }
+//         }
+//     }
+// }
 
 
 // pipeline {
