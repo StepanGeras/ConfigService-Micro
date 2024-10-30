@@ -1,119 +1,36 @@
-def branch
-def revision
-def registryIp
-
 pipeline {
-
     agent {
-        kubernetes {
-            label 'build-service-pod'
-            defaultContainer 'jnlp'
-            yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    job: build-service
-spec:
-  containers:
-  - name: gradle
-    image: gradle:7.6.0-jdk-11
-    command: ["cat"]
-    tty: true
-    volumeMounts:
-    - name: repository
-      mountPath: /root/.gradle/caches
-  - name: docker
-    image: docker:18.09.2
-    command: ["cat"]
-    tty: true
-    volumeMounts:
-    - name: docker-sock
-      mountPath: /var/run/docker.sock
-  volumes:
-  - name: repository
-    persistentVolumeClaim:
-      claimName: repository
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
-"""
+        docker {
+            image 'gradle:7.6.0-jdk-11'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
-    options {
-        skipDefaultCheckout true
-    }
-
     stages {
-        stage ('checkout') {
+        stage('Checkout') {
             steps {
-                script {
-                    def repo = checkout scm
-                    revision = sh(script: 'git log -1 --format=\'%h.%ad\' --date=format:%Y%m%d-%H%M | cat', returnStdout: true).trim()
-                    branch = repo.GIT_BRANCH.take(20).replaceAll('/', '_')
-                    if (branch != 'master') {
-                        revision += "-${branch}"
-                    }
-                    sh "echo 'Building revision: ${revision}'"
-                }
+                checkout scm
             }
         }
-        stage ('compile') {
+        stage('Build') {
             steps {
-                container('gradle') {
-                    sh 'gradle clean build'
-                }
+                sh 'gradle clean build'
             }
         }
-        stage ('unit test') {
+        stage('Test') {
             steps {
-                container('gradle') {
-                    sh 'gradle test'
-                }
+                sh 'gradle test'
             }
         }
-        stage ('integration test') {
+        stage('Deploy') {
             steps {
-                container ('gradle') {
-                    sh 'gradle check'
-                }
-            }
-        }
-        stage ('build artifact') {
-            steps {
-                container('gradle') {
-                    sh "gradle assemble -Drevision=${revision}"
-                }
-                container('docker') {
-                    script {
-                        registryIp = sh(script: 'getent hosts registry.kube-system | awk \'{ print $1 ; exit }\'', returnStdout: true).trim()
-                        sh "docker build . -t ${registryIp}/demo/app:${revision} --build-arg REVISION=${revision}"
-                    }
-                }
-            }
-        }
-        stage ('publish artifact') {
-            when {
-                expression {
-                    branch == 'master'
-                }
-            }
-            steps {
-                container('docker') {
-                    sh "docker push ${registryIp}/demo/app:${revision}"
-                }
-            }
-        }
-        stage ('deploy to minikube') {
-            steps {
-                script {
-                    // Убедитесь, что у вас установлен kubectl
-                    sh "kubectl set image deployment/${JOB_NAME} ${JOB_NAME}=${DOCKER_IMAGE} --namespace=microservices" // Путь к вашему yaml-файлу сервиса
-                }
+                // Команды для деплоя в Minikube, например:
+                sh 'kubectl apply -f k8s/deployment.yaml'
+                sh 'kubectl apply -f k8s/service.yaml'
             }
         }
     }
 }
+
 
 
 
