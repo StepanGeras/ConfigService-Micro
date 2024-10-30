@@ -25,7 +25,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    def DOCKER_USERNAME = 'lopukhstepan@gmail.com'
+                    def DOCKER_USERNAME = 'shifer'
                     def DOCKER_PASSWORD = 'P207EiwdRv'
             
                     sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
