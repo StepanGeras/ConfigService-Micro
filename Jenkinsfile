@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials' // ID учетных данных Docker Hub
         DOCKER_IMAGE = "shifer/${env.JOB_NAME}" // имя образа
-        VERSION = versionNumber() // получение версии из функции версии Gradle
     }
 
     stages {
