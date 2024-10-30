@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials' // ID учетных данных Docker Hub
         DOCKER_IMAGE = "shifer/${env.JOB_NAME}" // имя образа
     }
 
@@ -18,7 +17,14 @@ pipeline {
             steps {
                 // Собрать проект с помощью Gradle и создать Docker образ
                 sh './gradlew clean build' // Собирает проект
-                sh "docker build -t ${DOCKER_IMAGE} ." // Создает Docker образ с версией
+                // Сборка Docker образа с помощью Kaniko
+                sh '''
+                /kaniko/executor --context $WORKSPACE \
+                                 --dockerfile $WORKSPACE/Dockerfile \
+                                 --destination ${DOCKER_IMAGE} \
+                                 --oci-layout-path /kaniko/oci
+                '''
+                // sh "docker build -t ${DOCKER_IMAGE} ." // Создает Docker образ с версией
             }
         }
 
