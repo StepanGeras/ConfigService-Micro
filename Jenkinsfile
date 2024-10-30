@@ -17,7 +17,6 @@ pipeline {
         stage('Build') {
             steps {
                 // Собрать проект с помощью Gradle и создать Docker образ
-                echo "Building version ${VERSION}"
                 sh './gradlew clean build' // Собирает проект
                 sh "docker build -t ${DOCKER_IMAGE}:${VERSION} ." // Создает Docker образ с версией
             }
