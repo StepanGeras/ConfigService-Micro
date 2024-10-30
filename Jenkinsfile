@@ -17,6 +17,13 @@ pipeline {
             }
         }
 
+        stage('Install Docker') {
+            steps {
+                sh 'apt-get update && apt-get install -y docker.io'
+            }
+        }
+
+
         stage('Build') {
             steps {
                 // Собрать проект с помощью Gradle и создать Docker образ
