@@ -57,6 +57,7 @@ def versionNumber = {
     String appVersion = stdoutCommitNumber.toString().trim() + "-" +
             stdoutCommitHash.toString().trim() + "-" +
             stdoutBranchName.toString().trim()
+    println "Generated version: ${appVersion}"
     return appVersion.toLowerCase()
 }
 
