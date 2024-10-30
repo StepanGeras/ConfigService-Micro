@@ -18,7 +18,7 @@ pipeline {
             steps {
                 // Собрать проект с помощью Gradle и создать Docker образ
                 sh './gradlew clean build' // Собирает проект
-                def app = docker.build(DOCKER_IMAGE) // Создает Docker образ без версии
+                sh "docker build -t ${DOCKER_IMAGE} ." // Создает Docker образ с версией
             }
         }
 
