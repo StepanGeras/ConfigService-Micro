@@ -25,7 +25,7 @@ pipeline {
         }
         stage('Deploy to Minikube') {
             steps {
-                sh "kubectl set image deployment/configservice configservice=${MINIKUBE_REGISTRY}/${IMAGE_NAME}"
+                sh "kubectl set image deployment/configservice configservice=${IMAGE_NAME}"
             }
         }
     }
