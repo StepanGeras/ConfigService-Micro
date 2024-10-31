@@ -42,7 +42,11 @@ pipeline {
             } else {
             // Обновляем образ, если Deployment существует
                 sh "kubectl set image deployment/configservice configservice=${IMAGE_NAME}"
-            }    
+            }
+            sh """
+                kubectl set env deployment/configservice SPRING_CLOUD_CONSUL_HOST=${CONSUL_HOST} 
+                kubectl set env deployment/configservice SPRING_CLOUD_CONSUL_PORT=${CONSUL_PORT}
+            """
         }
     }
 }
