@@ -30,51 +30,17 @@ pipeline {
                 script: "kubectl get deployment configservice --ignore-not-found",
                 returnStatus: true
             ) == 0
-            
-            if (deploymentExists) {
+
+            if (!deploymentExists) {
                 // Создаем Deployment, если он не существует
-                echo "Creating Deployment 'configservice' with image: ${IMAGE_NAME}"
-                def createDeploymentStatus = sh(
-                    script: """
-                        kubectl create deployment configservice --image=${IMAGE_NAME}
-                        kubectl expose deployment configservice --type=ClusterIP --port=8888
-                    """,
-                    returnStatus: true
-                )
-                
-                if (createDeploymentStatus != 0) {
-                    error "Failed to create Deployment 'configservice'."
-                }
-                echo "Deployment 'configservice' created successfully."
+                sh """
+                    kubectl create deployment configservice --image=${IMAGE_NAME} 
+                    kubectl expose deployment configservice --type=ClusterIP --port=8888
+                 """
             } else {
-                // Обновляем образ, если Deployment существует
-                echo "Updating Deployment 'configservice' with image: ${IMAGE_NAME}"
-                def updateImageStatus = sh(
-                    script: "kubectl set image deployment/configservice configservice=${IMAGE_NAME}",
-                    returnStatus: true
-                )
-            
-                if (updateImageStatus != 0) {
-                    error "Failed to update Deployment 'configservice'."
-                }
-                echo "Deployment 'configservice' updated successfully."
-            }
-
-//             def deploymentExists = sh(
-//                 script: "kubectl get deployment configservice --ignore-not-found",
-//                 returnStatus: true
-//             ) == 0
-
-//             if (!deploymentExists) {
-//                 // Создаем Deployment, если он не существует
-//                 sh """
-//                     kubectl create deployment configservice --image=${IMAGE_NAME} 
-//                     kubectl expose deployment configservice --type=ClusterIP --port=8888
-//                  """
-//             } else {
-//             // Обновляем образ, если Deployment существует
-//                 sh "kubectl set image deployment/configservice configservice=${IMAGE_NAME}"
-//         }    
+            // Обновляем образ, если Deployment существует
+                sh "kubectl set image deployment/configservice configservice=${IMAGE_NAME}"
+            }    
         }
     }
 }
