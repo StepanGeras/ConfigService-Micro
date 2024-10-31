@@ -1,9 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_HUB_REPO = 'config'
-        IMAGE_NAME = "${DOCKER_HUB_REPO}:${VERSION}"
-        MINIKUBE_REGISTRY = 'localhost:53768'
+        IMAGE_NAME = "shifer/configservice:latest"
     }
     stages {
         stage('Gradle Build') {
@@ -21,8 +19,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
-                    sh "docker tag ${IMAGE_NAME} ${MINIKUBE_REGISTRY}/${IMAGE_NAME}"
-                    sh "docker push ${MINIKUBE_REGISTRY}/${IMAGE_NAME}"
+                    sh "docker push ${IMAGE_NAME}"
                 }
             }
         }
