@@ -13,10 +13,6 @@ pipeline {
         }
         stage('Docker Build') {
             steps {
-                script {
-                    def version = sh(returnStdout: true, script: './gradlew -q printVersion').trim()
-                    env.VERSION = version
-                }
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
