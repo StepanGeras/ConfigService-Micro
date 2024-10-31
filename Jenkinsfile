@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'docker:20.10.7' // Используйте необходимый образ Docker
+            args '-v /var/run/docker.sock:/var/run/docker.sock' // Прокси Docker-сокета
+        }
+    }
     stages {
         stage('Checkout') {
             steps {
