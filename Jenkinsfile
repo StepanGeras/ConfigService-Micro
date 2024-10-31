@@ -3,7 +3,7 @@ pipeline {
     environment {
         DOCKER_HUB_REPO = 'microservice-configservice'
         IMAGE_NAME = "${DOCKER_HUB_REPO}:${VERSION}"
-        MINIKUBE_REGISTRY = 'localhost:51192'
+        MINIKUBE_REGISTRY = 'localhost:51528'
     }
     stages {
         stage('Gradle Build') {
