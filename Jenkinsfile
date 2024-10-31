@@ -14,13 +14,6 @@ pipeline {
         }
         stage('Docker Build') {
             steps {
-                // Получаем имя JAR-файла
-                def jarFile = sh(script: 'ls build/libs/*.jar', returnStdout: true).trim()
-                // Извлекаем имя файла без пути
-                def imageName = jarFile.split('/').last()
-                // Устанавливаем имя образа
-                env.IMAGE_NAME = "${DOCKER_HUB_REPO}:${imageName.replace('.jar', '')}"
-                
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
