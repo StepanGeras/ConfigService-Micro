@@ -9,6 +9,7 @@ pipeline {
         stage('Gradle Build') {
             steps {
                 sh './gradlew clean build'
+                sh 'ls -la build/libs'
             }
         }
         stage('Docker Build') {
