@@ -1,15 +1,9 @@
 pipeline {
-    agent {
-        docker {
-            image 'docker:20.10.7' // Используйте необходимый образ Docker
-            args '-v /var/run/docker.sock:/var/run/docker.sock' // Прокси Docker-сокета
-        }
-    }
+    agent any
     stages {
         stage('Checkout') {
             steps {
                 // Клонирует изменения из Git
-                // git branch: 'main', url: 'https://github.com/StepanGeras/ConfigService-Micro.git'
                 checkout scm
             }
         }
