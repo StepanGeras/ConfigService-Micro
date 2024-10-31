@@ -28,19 +28,17 @@ pipeline {
         script {
             def deploymentExists = sh(
                 script: "kubectl get deployment configservice --ignore-not-found",
-                returnStatus: false
+                returnStatus: true
             ) == 0
 
-            if (deploymentExists) {
+            if (!deploymentExists) {
                 // Обновляем образ, если Deployment существует
-                sh "kubectl set image deployment/configservice configservice=${IMAGE_NAME}"
-            } else {
-                // Создаём Deployment, если его нет
                 sh """
                     kubectl create deployment configservice --image=${IMAGE_NAME} 
-                    kubectl expose deployment configservice --type=ClusterIP --port=8080
+                    kubectl expose deployment configservice --type=ClusterIP --port=8888
                 """
             }
+            sh "kubectl set image deployment/configservice configservice=${IMAGE_NAME}"
         }
     }
 }
