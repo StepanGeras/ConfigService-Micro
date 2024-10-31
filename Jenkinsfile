@@ -8,6 +8,16 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Login to Registry') {
+            steps {
+                script {
+                    // Использование учетных данных
+                    withCredentials([usernamePassword(credentialsId: 'docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh "echo '${DOCKER_PASSWORD}' | docker login 192.168.49.2:58886 -u '${DOCKER_USERNAME}' --password-stdin"
+                    }
+                }
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 script {
