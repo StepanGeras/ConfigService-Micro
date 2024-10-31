@@ -2,6 +2,8 @@ pipeline {
     agent any
     environment {
         IMAGE_NAME = "shifer/configservice:latest"
+        CONSUL_HOST = "consul"
+        CONSUL_PORT = "8500"   
     }
     stages {
         stage('Gradle Build') {
