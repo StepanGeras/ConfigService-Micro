@@ -34,13 +34,13 @@ pipeline {
             ) == 0
 
             if (!deploymentExists) {
-                // Создаем Deployment, если он не существует
+
                 sh """
                     kubectl create deployment configservice --image=${IMAGE_NAME} 
                     kubectl expose deployment configservice --type=ClusterIP --port=8888
                  """
             } else {
-            // Обновляем образ, если Deployment существует
+
                 sh "kubectl set image deployment/configservice configservice=${IMAGE_NAME}"
             }
             sh """
