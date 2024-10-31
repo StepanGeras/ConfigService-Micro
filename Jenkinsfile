@@ -12,18 +12,6 @@ pipeline {
                 sh 'ls -la build/libs'
             }
         }
-        stage('Clean Old Docker Images') {
-            steps {
-                script {
-                    // Получение списка старых образов, соответствующих вашему репозиторию
-                    def oldImages = sh(script: "docker images -q ${DOCKER_HUB_REPO}*", returnStdout: true).trim()
-                    if (oldImages) {
-                        // Удаление старых образов
-                        sh "docker rmi ${oldImages} || true" // || true для игнорирования ошибок, если образа не существует
-                    }
-                }
-            }
-        }
         stage('Check Docker') {
             steps {
                 sh 'docker --version'
