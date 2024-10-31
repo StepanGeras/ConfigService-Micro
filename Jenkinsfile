@@ -1,107 +1,38 @@
-// pipeline {
-//     agent any
-//     stages {
-//         stage('Checkout') {
-//             steps {
-//                 // Клонирует изменения из Git
-//                 checkout scm
-//             }
-//         }
-//         stage('Login to Registry') {
-//             steps {
-//                 script {
-//                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-//                         sh '''
-//                         echo "${DOCKER_PASSWORD}" | docker login 192.168.49.2:58886 -u "${DOCKER_USERNAME}" --password-stdin
-//                         '''
-//                     }
-//                 }
-//             }
-//         }
-//         stage('Build Docker Image') {
-//             steps {
-//                 script {
-//                     // Собирает Docker-образ
-//                     sh './gradlew clean build' // Собирает проект
-//                     def imageName = "192.168.49.2:58886/shifer/microservice-configservice"
-//                     sh "docker build -t ${imageName} ."
-//                 }
-//             }
-//         }
-//         stage('Push Docker Image') {
-//             steps {
-//                 script {
-//                     // Пушит собранный образ в Minikube registry
-//                     sh "docker push $REGISTRY/$IMAGE_NAME:${env.BUILD_NUMBER}"
-//                 }
-//             }
-//         }
-//         stage('Deploy to Minikube') {
-//             steps {
-//                 script {
-//                     // Применяет обновления в кластере Minikube
-//                     sh """
-//                     kubectl set image deployment/your-deployment-name your-container=$REGISTRY/$IMAGE_NAME:${env.BUILD_NUMBER} -n your-namespace
-//                     """
-//                 }
-//             }
-//         }
-//     }
-// }
-
-
 pipeline {
-
     agent any
-    
     environment {
-        DOCKER_IMAGE = "shifer/${env.JOB_NAME}" // имя образа
-        DOCKER_HOST = "tcp://192.168.49.2:2376" // Подключение к Docker-демону Minikube
-        DOCKER_TLS_VERIFY = "1"
-        DOCKER_CERT_PATH = "${env.HOME}/.minikube/certs" // Убедитесь, что сертификаты присутствуют
+        DOCKER_HUB_REPO = 'microservice-configservice'
+        IMAGE_NAME = "${DOCKER_HUB_REPO}:${VERSION}"
+        MINIKUBE_REGISTRY = 'localhost:61701'
     }
-
     stages {
-        stage('Checkout') {
+        stage('Gradle Build') {
             steps {
-                // Склонировать проект из Git-репозитория
-                checkout scm
+                sh './gradlew clean build'
             }
         }
-
-        stage('Build') {
+        stage('Docker Build') {
             steps {
-                // Собрать проект с помощью Gradle и создать Docker образ
-                sh './gradlew clean build' // Собирает проект
-                sh "docker build -t ${DOCKER_IMAGE} ." // Создает Docker образ с версией
+                script {
+                    def version = sh(returnStdout: true, script: './gradlew -q printVersion').trim()
+                    env.VERSION = version
+                }
+                sh "docker build -t ${IMAGE_NAME} ."
             }
         }
-
-        stage('Push to Docker Hub') {
+        stage('Docker Push') {
             steps {
-                // Аутентификация и пуш образа в Docker Hub
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
-                    sh "docker push ${DOCKER_IMAGE}"
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
+                    sh "docker tag ${IMAGE_NAME} ${MINIKUBE_REGISTRY}/${IMAGE_NAME}"
+                    sh "docker push ${MINIKUBE_REGISTRY}/${IMAGE_NAME}"
                 }
             }
         }
-
         stage('Deploy to Minikube') {
             steps {
-                // Деплой образа в Minikube
-                script {
-                    sh "kubectl set image deployment/${JOB_NAME} ${JOB_NAME}=${DOCKER_IMAGE} --namespace=microservices"
-                }
+                sh "kubectl set image deployment/configservice configservice=${MINIKUBE_REGISTRY}/${IMAGE_NAME}"
             }
-        }
-    }
-
-    post {
-        always {
-            // Убираем неиспользуемые образы после завершения
-            sh 'docker image prune -f'
         }
     }
 }
-
