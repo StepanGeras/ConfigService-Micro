@@ -31,7 +31,7 @@ pipeline {
                 returnStatus: true
             ) == 0
             
-            if (!deploymentExists) {
+            if (deploymentExists) {
                 // Создаем Deployment, если он не существует
                 echo "Creating Deployment 'configservice' with image: ${IMAGE_NAME}"
                 def createDeploymentStatus = sh(
