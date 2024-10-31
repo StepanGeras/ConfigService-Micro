@@ -12,11 +12,6 @@ pipeline {
                 sh 'ls -la build/libs'
             }
         }
-        stage('Check Docker') {
-            steps {
-                sh 'docker --version'
-            }
-        }
         stage('Docker Build') {
             steps {
                 sh "docker build -t ${IMAGE_NAME} ."
