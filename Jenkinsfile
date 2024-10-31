@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    environment {
-        REGISTRY = "localhost:61701" // Minikube registry
-        IMAGE_NAME = "shifer/microservice-configservice" // Название вашего образа
-    }
     stages {
         stage('Checkout') {
             steps {
@@ -17,7 +13,8 @@ pipeline {
                 script {
                     // Собирает Docker-образ
                     sh './gradlew clean build' // Собирает проект
-                    sh "docker build -t $REGISTRY/$IMAGE_NAME:${env.BUILD_NUMBER} ."
+                    def imageName = "192.168.49.2:58886/shifer/microservice-configservice"
+                    sh "docker build -t ${imageName} ."
                 }
             }
         }
