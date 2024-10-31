@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_HUB_REPO = 'configservice'
+        DOCKER_HUB_REPO = 'config'
         IMAGE_NAME = "${DOCKER_HUB_REPO}:${VERSION}"
         MINIKUBE_REGISTRY = 'localhost:53768'
     }
