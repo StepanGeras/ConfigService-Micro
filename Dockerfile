@@ -2,9 +2,7 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-ARG JAR_FILE=build/libs/*main.jar
-
-COPY ${JAR_FILE} app.jar
+COPY build/libs/*main.jar app.jar
 
 EXPOSE 8081
 
