@@ -28,7 +28,7 @@ pipeline {
         script {
             def deploymentExists = sh(
                 script: "kubectl get deployment configservice --ignore-not-found",
-                returnStatus: true
+                returnStatus: false
             ) == 0
 
             if (deploymentExists) {
